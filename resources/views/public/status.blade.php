@@ -18,9 +18,18 @@
                             <div><dt class="font-semibold text-stone-700">Umur</dt><dd>{{ $participant->age }}</dd></div>
                             <div><dt class="font-semibold text-stone-700">Kategori</dt><dd>{{ $participant->category }}</dd></div>
                             <div><dt class="font-semibold text-stone-700">Rumah Sukan</dt><dd>{{ $participant->house?->name }}</dd></div>
-                            <div><dt class="font-semibold text-stone-700">Acara</dt><dd>{{ $participant->sportRegistrations->pluck('sport.name')->filter()->join(', ') ?: 'Belum dipilih' }}</dd></div>
+                            <div>
+                                <dt class="font-semibold text-stone-700">Acara</dt>
+                                <dd>
+                                    @forelse ($participant->sportRegistrations as $registration)
+                                        <span>{{ $registration->sport?->name }} ({{ $registration->status }})</span>
+                                    @empty
+                                        Belum dipilih
+                                    @endforelse
+                                </dd>
+                            </div>
                         </dl>
-                        <p class="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Untuk pembetulan maklumat, sila hubungi admin. Tiada fungsi edit untuk peserta awam.</p>
+                        <p class="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Untuk pembetulan maklumat, sila hubungi urusetia. Tiada fungsi edit untuk peserta awam.</p>
                     </div>
                 @empty
                     <div class="kb-card p-5 text-stone-600">Tiada rekod dijumpai.</div>

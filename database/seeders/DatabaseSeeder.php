@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\House;
+use App\Models\Setting;
 use App\Models\Sport;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -41,5 +42,15 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Catch the Duck', 'category' => 'Kanak-Kanak', 'max_players_per_group' => 12, 'duration_minutes' => 20, 'group_code' => 'CDCS2406C'],
             ['name' => 'Tarik Tali Final', 'category' => 'Terbuka', 'max_players_per_group' => 10, 'duration_minutes' => 20, 'group_code' => 'CDCS2406C'],
         ])->each(fn (array $sport) => Sport::updateOrCreate(['name' => $sport['name']], $sport + ['is_active' => true]));
+
+        collect([
+            'registration_is_open' => '1',
+            'registration_deadline' => null,
+            'event_date' => null,
+            'event_time' => null,
+            'event_venue' => 'Kampung Budiman',
+            'admin_contact' => null,
+            'whatsapp_template' => "Assalamualaikum/Salam sejahtera [Nama],\n\nIni adalah peringatan bahawa anda telah berdaftar untuk Sukan Rakyat Kampung Budiman.\n\nRumah Sukan: [Rumah]\nTarikh: [Tarikh]\nMasa: [Masa]\nTempat: [Lokasi]\n\nSila hadir awal untuk urusan pendaftaran kehadiran.\nTerima kasih.",
+        ])->each(fn ($value, string $key) => Setting::setValue($key, $value));
     }
 }

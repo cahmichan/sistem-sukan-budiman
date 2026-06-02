@@ -15,7 +15,7 @@ class SportController extends Controller
     public function index()
     {
         return view('admin.sports.index', [
-            'sports' => Sport::withCount('registrations')->orderBy('category')->orderBy('name')->paginate(15),
+            'sports' => Sport::withCount(['registrations', 'acceptedRegistrations', 'waitingListRegistrations'])->orderBy('category')->orderBy('name')->paginate(15),
         ]);
     }
 
@@ -59,6 +59,15 @@ class SportController extends Controller
      */
     public function update(SportRequest $request, Sport $sport)
     {
+        $newCapacity = $request->integer('max_players_per_group') ?: null;
+        $acceptedCount = $sport->acceptedRegistrations()->count();
+
+        if ($newCapacity && $newCapacity < $acceptedCount) {
+            return back()
+                ->withInput()
+                ->with('error', "Kapasiti tidak boleh kurang daripada {$acceptedCount} peserta yang telah diterima.");
+        }
+
         $oldValues = $sport->toArray();
         $sport->update($request->validated() + ['is_active' => $request->boolean('is_active')]);
         AuditLog::record('update', $sport, $oldValues, $sport->toArray());

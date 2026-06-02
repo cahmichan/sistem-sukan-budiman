@@ -48,7 +48,16 @@
                             @endforelse
                         </ul>
                     </div>
-                    <a class="kb-btn-secondary w-full" target="_blank" href="https://wa.me/6{{ preg_replace('/\D/', '', ltrim($participant->phone, '0')) }}?text={{ urlencode('Assalamualaikum/Salam sejahtera '.$participant->name.",\n\nIni adalah peringatan bahawa anda telah berdaftar untuk Sukan Rakyat Kampung Budiman.\n\nRumah Sukan: ".($participant->house?->name ?? '-')."\nSila hadir awal untuk urusan pendaftaran kehadiran.\nTerima kasih.") }}">Buka WhatsApp Peringatan</a>
+                    @php
+                        $settings = \App\Models\Setting::allAsArray();
+                        $message = $settings['whatsapp_template'] ?? '';
+                        $message = str_replace(
+                            ['[Nama]', '[Rumah]', '[Tarikh]', '[Masa]', '[Lokasi]'],
+                            [$participant->name, $participant->house?->name ?? '-', $settings['event_date'] ?? '-', $settings['event_time'] ?? '-', $settings['event_venue'] ?? '-'],
+                            $message
+                        );
+                    @endphp
+                    <a class="kb-btn-secondary w-full" target="_blank" href="https://wa.me/60{{ preg_replace('/\D/', '', ltrim($participant->phone, '0')) }}?text={{ urlencode($message) }}">Buka WhatsApp Peringatan</a>
                 </div>
             </div>
         </div>

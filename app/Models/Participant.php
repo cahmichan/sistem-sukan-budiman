@@ -10,6 +10,11 @@ class Participant extends Model
 {
     public const CHILD_AGE_THRESHOLD = 12;
 
+    public static function categoryForAge(int $age): string
+    {
+        return $age < self::CHILD_AGE_THRESHOLD ? 'Kanak-Kanak' : 'Dewasa';
+    }
+
     protected $fillable = [
         'registration_code',
         'name',
@@ -39,6 +44,6 @@ class Participant extends Model
 
     public function getIsChildAttribute(): bool
     {
-        return $this->age < self::CHILD_AGE_THRESHOLD || $this->category === 'Kanak-Kanak';
+        return self::categoryForAge((int) $this->age) === 'Kanak-Kanak';
     }
 }

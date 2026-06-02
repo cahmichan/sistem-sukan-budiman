@@ -7,7 +7,7 @@
     @method('PUT')
 @endif
 
-<div class="grid gap-4 sm:grid-cols-2" x-data="{ age: '{{ old('age', $participant->age) }}', category: '{{ old('category', $participant->category) }}' }">
+<div class="grid gap-4 sm:grid-cols-2" x-data="{ age: '{{ old('age', $participant->age) }}', category() { return Number(this.age) > 0 && Number(this.age) < {{ \App\Models\Participant::CHILD_AGE_THRESHOLD }} ? 'Kanak-Kanak' : (Number(this.age) >= {{ \App\Models\Participant::CHILD_AGE_THRESHOLD }} ? 'Dewasa' : 'Ditentukan melalui umur') } }">
     <div class="sm:col-span-2">
         <label class="kb-label" for="name">Nama peserta</label>
         <input class="kb-input" id="name" name="name" value="{{ old('name', $participant->name) }}" required>
@@ -24,14 +24,9 @@
         @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
     <div>
-        <label class="kb-label" for="category">Kategori</label>
-        <select class="kb-input" id="category" name="category" x-model="category" required>
-            <option value="">Pilih kategori</option>
-            @foreach (['Kanak-Kanak', 'Dewasa', 'Terbuka'] as $category)
-                <option value="{{ $category }}" @selected(old('category', $participant->category) === $category)>{{ $category }}</option>
-            @endforeach
-        </select>
-        @error('category') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+        <label class="kb-label">Kategori</label>
+        <div class="rounded-lg border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-green-900" x-text="category()"></div>
+        <p class="mt-1 text-xs text-stone-500">Kategori dikira automatik daripada umur.</p>
     </div>
     <div>
         <label class="kb-label" for="house_id">Rumah sukan</label>
@@ -51,27 +46,30 @@
             @endforeach
         </select>
     </div>
-    <div>
+    <div class="sm:col-span-2">
+        <label class="kb-label" for="sport_id">Acara sukan</label>
+        <select class="kb-input" id="sport_id" name="sport_id">
+            <option value="">Tiada acara</option>
+            @foreach ($sports as $sport)
+                <option value="{{ $sport->id }}" @selected(old('sport_id', $selectedRegistration?->sport_id) == $sport->id) x-bind:disabled="category() !== 'Ditentukan melalui umur' && ! ['Terbuka', category()].includes('{{ $sport->category }}')">
+                    {{ $sport->name }} - {{ $sport->category }} ({{ $sport->is_active ? $sport->availabilityLabel() : 'Tidak Aktif' }})
+                </option>
+            @endforeach
+        </select>
+        <p class="mt-1 text-xs text-stone-500">Pilihan acara dikawal oleh kategori umur. Acara Terbuka dibenarkan untuk semua peserta.</p>
+        @error('sport_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+    </div>
+    <div class="sm:col-span-2">
         <label class="kb-label" for="sport_status">Status acara</label>
         <select class="kb-input" id="sport_status" name="sport_status">
             @foreach (['Menunggu', 'Diterima', 'Ditolak', 'Senarai Menunggu', 'Dibatalkan'] as $status)
-                <option value="{{ $status }}" @selected(old('sport_status') === $status)>{{ $status }}</option>
+                <option value="{{ $status }}" @selected(old('sport_status', $selectedRegistration?->status ?: 'Menunggu') === $status)>{{ $status }}</option>
             @endforeach
         </select>
-    </div>
-    <div class="sm:col-span-2">
-        <label class="kb-label">Acara sukan</label>
-        <div class="grid gap-2 rounded-lg border border-stone-200 bg-stone-50 p-3 sm:grid-cols-2">
-            @foreach ($sports as $sport)
-                <label class="flex gap-2 text-sm">
-                    <input type="checkbox" name="sport_ids[]" value="{{ $sport->id }}" @checked(in_array($sport->id, old('sport_ids', $selectedSports), true))>
-                    <span>{{ $sport->name }} <span class="text-stone-500">({{ $sport->category }})</span></span>
-                </label>
-            @endforeach
-        </div>
+        @error('sport_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
     </div>
 
-    <div class="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-4" x-show="Number(age) > 0 && (Number(age) < {{ \App\Models\Participant::CHILD_AGE_THRESHOLD }} || category === 'Kanak-Kanak')">
+    <div class="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-4" x-show="Number(age) > 0 && Number(age) < {{ \App\Models\Participant::CHILD_AGE_THRESHOLD }}">
         <h2 class="font-semibold text-amber-950">Maklumat Penjaga</h2>
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">

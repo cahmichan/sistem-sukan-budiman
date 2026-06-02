@@ -6,7 +6,7 @@
                 <p class="mt-2 text-sm text-stone-600">Sila pastikan maklumat tepat sebelum dihantar. Peserta tidak boleh mengedit maklumat selepas pendaftaran.</p>
             </div>
 
-            <form method="POST" action="{{ route('public.register.store') }}" class="kb-card space-y-6 p-5 sm:p-6" x-data="{ age: '{{ old('age') }}', category: '{{ old('category') }}' }">
+            <form method="POST" action="{{ route('public.register.store') }}" class="kb-card space-y-6 p-5 sm:p-6" x-data="{ age: '{{ old('age') }}', category() { return Number(this.age) > 0 && Number(this.age) < {{ $childAgeThreshold }} ? 'Kanak-Kanak' : (Number(this.age) >= {{ $childAgeThreshold }} ? 'Dewasa' : 'Ditentukan melalui umur') } }">
                 @csrf
 
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -26,14 +26,9 @@
                         @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="kb-label" for="category">Kategori peserta</label>
-                        <select class="kb-input" id="category" name="category" x-model="category" required>
-                            <option value="">Pilih kategori</option>
-                            @foreach (['Kanak-Kanak', 'Dewasa', 'Terbuka'] as $category)
-                                <option value="{{ $category }}" @selected(old('category') === $category)>{{ $category }}</option>
-                            @endforeach
-                        </select>
-                        @error('category') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        <label class="kb-label">Kategori peserta</label>
+                        <div class="rounded-lg border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-green-900" x-text="category()"></div>
+                        <p class="mt-1 text-xs text-stone-500">Kategori ditentukan secara automatik berdasarkan umur.</p>
                     </div>
                     <div>
                         <label class="kb-label" for="house_id">Rumah sukan</label>
@@ -47,16 +42,20 @@
                     </div>
                     <div class="sm:col-span-2">
                         <label class="kb-label" for="sport_id">Acara pilihan</label>
-                        <select class="kb-input" id="sport_id" name="sport_id">
-                            <option value="">Pilih kemudian / tiada pilihan</option>
+                        <select class="kb-input" id="sport_id" name="sport_id" required>
+                            <option value="">Pilih acara</option>
                             @foreach ($sports as $sport)
-                                <option value="{{ $sport->id }}" @selected(old('sport_id') == $sport->id)>{{ $sport->name }} - {{ $sport->category }}</option>
+                                <option value="{{ $sport->id }}" @selected(old('sport_id') == $sport->id) x-bind:disabled="category() !== 'Ditentukan melalui umur' && ! ['Terbuka', category()].includes('{{ $sport->category }}')">
+                                    {{ $sport->name }} - {{ $sport->category }} ({{ $sport->availabilityLabel() }})
+                                </option>
                             @endforeach
                         </select>
+                        <p class="mt-2 text-xs text-stone-500">Acara Dewasa/Kanak-Kanak akan dipadankan mengikut umur. Acara Terbuka boleh disertai semua peserta. Jika acara penuh, pendaftaran anda akan dimasukkan ke Senarai Menunggu.</p>
+                        @error('sport_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
-                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4" x-show="Number(age) > 0 && (Number(age) < {{ $childAgeThreshold }} || category === 'Kanak-Kanak')">
+                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4" x-show="Number(age) > 0 && Number(age) < {{ $childAgeThreshold }}">
                     <h2 class="font-semibold text-amber-950">Maklumat Penjaga</h2>
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
                         <div class="sm:col-span-2">

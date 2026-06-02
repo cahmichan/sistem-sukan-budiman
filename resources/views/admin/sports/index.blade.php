@@ -10,16 +10,16 @@
         <div class="kb-card overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead class="bg-stone-100"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Kategori</th><th class="px-4 py-3">Pemain</th><th class="px-4 py-3">Tempoh</th><th class="px-4 py-3">Kumpulan</th><th class="px-4 py-3">Daftar</th><th></th></tr></thead>
+                    <thead class="bg-stone-100"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Kategori</th><th class="px-4 py-3">Kapasiti</th><th class="px-4 py-3">Diterima</th><th class="px-4 py-3">Menunggu</th><th class="px-4 py-3">Status</th><th></th></tr></thead>
                     <tbody>
                         @foreach ($sports as $sport)
                             <tr class="border-t border-stone-100">
                                 <td class="px-4 py-3 font-semibold">{{ $sport->name }}</td>
                                 <td class="px-4 py-3">{{ $sport->category }}</td>
-                                <td class="px-4 py-3">{{ $sport->max_players_per_group }}</td>
-                                <td class="px-4 py-3">{{ $sport->duration_minutes }} min</td>
-                                <td class="px-4 py-3">{{ $sport->group_code }}</td>
-                                <td class="px-4 py-3">{{ $sport->registrations_count }}</td>
+                                <td class="px-4 py-3">{{ $sport->max_players_per_group ?: 'Tiada had' }}</td>
+                                <td class="px-4 py-3">{{ $sport->accepted_registrations_count }}</td>
+                                <td class="px-4 py-3">{{ $sport->waiting_list_registrations_count }}</td>
+                                <td class="px-4 py-3">{{ $sport->is_active ? $sport->availabilityLabel() : 'Tidak Aktif' }}</td>
                                 <td class="px-4 py-3 text-right"><a class="font-semibold text-green-800" href="{{ route('admin.sports.edit', $sport) }}">Edit</a></td>
                             </tr>
                         @endforeach

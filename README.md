@@ -92,6 +92,9 @@ npm run build
 - `/admin/houses` - Pengurusan rumah sukan
 - `/admin/sports` - Pengurusan acara sukan
 - `/admin/reports` - Laporan dan eksport CSV
+- `/admin/reports/print` - Senarai cetakan peserta
+- `/admin/audit-logs` - Audit log tindakan admin
+- `/admin/settings` - Tetapan pendaftaran dan maklumat acara
 
 ## Ciri Utama
 
@@ -99,12 +102,18 @@ npm run build
 - Kod pendaftaran unik
 - Peserta awam tidak boleh edit selepas hantar
 - Maklumat penjaga wajib untuk peserta kanak-kanak
+- Kategori peserta dikira automatik berdasarkan umur: bawah 12 tahun `Kanak-Kanak`, 12 tahun ke atas `Dewasa`
+- Acara `Terbuka` boleh dipilih oleh peserta kanak-kanak dan dewasa
 - Admin boleh tambah, lihat, edit dan padam peserta
 - Admin boleh urus rumah sukan dan acara
 - Assign peserta kepada acara
 - Eksport CSV
+- Senarai cetakan mesra printer
 - Link WhatsApp peringatan ringkas
 - Audit log untuk tindakan create, update dan delete admin
+- Tetapan buka/tutup pendaftaran, tarikh akhir, tarikh acara, masa, tempat dan kontak admin
+- Kawalan kapasiti acara dengan status `Diterima` dan `Senarai Menunggu`
+- Pautan login admin tidak dipaparkan di halaman awam; admin boleh terus buka `/login`
 
 ## Ujian
 
@@ -115,14 +124,10 @@ php artisan test
 ## Had Semasa
 
 - Tiada integrasi SMS atau WhatsApp API berbayar.
-- Audit log direkodkan dalam database tetapi belum ada halaman paparan khusus.
 - Role management penuh dengan Spatie belum dipasang kerana hanya admin asas diperlukan pada fasa ini.
-- Tarikh, masa dan lokasi acara belum dijadikan tetapan sistem.
+- Sistem belum menjana PDF automatik; cetakan dibuat melalui halaman print-friendly.
 
 ## Cadangan Penambahbaikan
 
-- Halaman audit log admin.
-- Tetapan tarikh, masa dan lokasi untuk mesej peringatan.
-- Cetakan senarai peserta mengikut rumah sukan/acara.
 - QR code generator untuk pautan `/daftar`.
 - Role tambahan seperti petugas pendaftaran atau penyelaras acara.

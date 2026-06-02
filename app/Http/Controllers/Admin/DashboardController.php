@@ -15,7 +15,7 @@ class DashboardController extends Controller
             'totalParticipants' => Participant::count(),
             'childParticipants' => Participant::where('category', 'Kanak-Kanak')->orWhere('age', '<', Participant::CHILD_AGE_THRESHOLD)->count(),
             'adultParticipants' => Participant::where('category', 'Dewasa')->count(),
-            'openParticipants' => Participant::where('category', 'Terbuka')->count(),
+            'activeParticipants' => Participant::where('status', 'Aktif')->count(),
             'participantsByHouse' => House::withCount('participants')->orderBy('name')->get(),
             'sports' => Sport::withCount('registrations')->orderBy('name')->get(),
             'latestParticipants' => Participant::with('house')->latest()->take(8)->get(),

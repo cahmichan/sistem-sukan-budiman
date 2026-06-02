@@ -18,7 +18,7 @@
             </select>
             <select class="kb-input" name="category">
                 <option value="">Semua kategori</option>
-                @foreach (['Kanak-Kanak', 'Dewasa', 'Terbuka'] as $category)
+                @foreach (['Kanak-Kanak', 'Dewasa'] as $category)
                     <option value="{{ $category }}" @selected(request('category') === $category)>{{ $category }}</option>
                 @endforeach
             </select>

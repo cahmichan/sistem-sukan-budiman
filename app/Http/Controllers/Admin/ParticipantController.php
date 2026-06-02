@@ -10,7 +10,9 @@ use App\Models\House;
 use App\Models\Participant;
 use App\Models\Sport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ParticipantController extends Controller
 {
@@ -48,7 +50,7 @@ class ParticipantController extends Controller
             'participant' => new Participant(['status' => 'Aktif']),
             'houses' => House::orderBy('name')->get(),
             'sports' => Sport::where('is_active', true)->orderBy('category')->orderBy('name')->get(),
-            'selectedSports' => [],
+            'selectedRegistration' => null,
         ]);
     }
 
@@ -57,9 +59,9 @@ class ParticipantController extends Controller
      */
     public function store(AdminParticipantRequest $request)
     {
-        $participant = $this->saveParticipant(new Participant([
+        $participant = DB::transaction(fn () => $this->saveParticipant(new Participant([
             'registration_code' => $this->generateRegistrationCode(),
-        ]), $request);
+        ]), $request));
 
         AuditLog::record('create', $participant, null, $participant->toArray());
 
@@ -86,8 +88,8 @@ class ParticipantController extends Controller
         return view('admin.participants.edit', [
             'participant' => $participant,
             'houses' => House::orderBy('name')->get(),
-            'sports' => Sport::where('is_active', true)->orderBy('category')->orderBy('name')->get(),
-            'selectedSports' => $participant->sportRegistrations->pluck('sport_id')->all(),
+            'sports' => Sport::orderBy('category')->orderBy('name')->get(),
+            'selectedRegistration' => $participant->sportRegistrations->first(),
         ]);
     }
 
@@ -97,7 +99,7 @@ class ParticipantController extends Controller
     public function update(AdminParticipantRequest $request, Participant $participant)
     {
         $oldValues = $participant->load('guardian', 'sportRegistrations')->toArray();
-        $participant = $this->saveParticipant($participant, $request);
+        $participant = DB::transaction(fn () => $this->saveParticipant($participant, $request));
 
         AuditLog::record('update', $participant, $oldValues, $participant->fresh(['guardian', 'sportRegistrations'])->toArray());
 
@@ -120,7 +122,8 @@ class ParticipantController extends Controller
     private function saveParticipant(Participant $participant, AdminParticipantRequest $request): Participant
     {
         $data = $request->validated();
-        $isChild = (int) $data['age'] < Participant::CHILD_AGE_THRESHOLD || $data['category'] === 'Kanak-Kanak';
+        $category = Participant::categoryForAge((int) $data['age']);
+        $isChild = $category === 'Kanak-Kanak';
         $guardian = $participant->guardian;
 
         if ($isChild) {
@@ -144,7 +147,7 @@ class ParticipantController extends Controller
             'name' => $data['name'],
             'age' => $data['age'],
             'phone' => $data['phone'],
-            'category' => $data['category'],
+            'category' => $category,
             'house_id' => $data['house_id'],
             'guardian_id' => $guardian?->id,
             'status' => $data['status'],
@@ -157,12 +160,22 @@ class ParticipantController extends Controller
 
         $participant->save();
 
-        $sync = collect($data['sport_ids'] ?? [])->mapWithKeys(fn ($sportId) => [
-            $sportId => ['status' => $data['sport_status'] ?? 'Menunggu', 'remarks' => null],
-        ])->all();
-        $participant->sportRegistrations()->whereNotIn('sport_id', array_keys($sync))->delete();
-        foreach ($sync as $sportId => $attributes) {
-            $participant->sportRegistrations()->updateOrCreate(['sport_id' => $sportId], $attributes);
+        $participant->sportRegistrations()->where('sport_id', '!=', $data['sport_id'] ?? 0)->delete();
+
+        if (! empty($data['sport_id'])) {
+            $sport = Sport::lockForUpdate()->findOrFail($data['sport_id']);
+            $status = $data['sport_status'] ?? 'Menunggu';
+
+            if ($status === 'Diterima' && ! $sport->hasCapacity($participant->id)) {
+                throw ValidationException::withMessages([
+                    'sport_status' => 'Acara ini telah penuh. Gunakan status Senarai Menunggu atau pilih acara lain.',
+                ]);
+            }
+
+            $participant->sportRegistrations()->updateOrCreate(
+                ['sport_id' => $sport->id],
+                ['status' => $status, 'remarks' => null],
+            );
         }
 
         return $participant;

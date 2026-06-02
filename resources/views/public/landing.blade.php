@@ -15,7 +15,7 @@
                 <ul class="mt-4 space-y-3 text-sm leading-6 text-green-50">
                     <li>Peserta awam tidak perlu log masuk.</li>
                     <li>Maklumat tidak boleh diedit sendiri selepas dihantar.</li>
-                    <li>Jika ada kesilapan, sila hubungi pihak admin.</li>
+                    <li>Jika ada kesilapan, sila hubungi pihak urusetia.</li>
                     <li>Peserta kanak-kanak perlu maklumat penjaga.</li>
                 </ul>
             </div>
@@ -34,7 +34,7 @@
             </div>
             <div class="kb-card p-5">
                 <p class="font-semibold text-green-900">3. Hadir Awal</p>
-                <p class="mt-2 text-sm text-stone-600">Admin akan mengurus senarai dan pengesahan peserta.</p>
+                <p class="mt-2 text-sm text-stone-600">Urusetia akan mengurus senarai dan pengesahan peserta.</p>
             </div>
         </div>
     </section>

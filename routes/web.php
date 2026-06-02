@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HouseController;
 use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicRegistrationController;
@@ -26,6 +28,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('/admin/sports', SportController::class)->names('admin.sports');
     Route::get('/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
     Route::get('/admin/reports/export', [ReportController::class, 'export'])->name('admin.reports.export');
+    Route::get('/admin/reports/print', [ReportController::class, 'print'])->name('admin.reports.print');
+    Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
+    Route::get('/admin/settings', [SettingController::class, 'edit'])->name('admin.settings.edit');
+    Route::put('/admin/settings', [SettingController::class, 'update'])->name('admin.settings.update');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

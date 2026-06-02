@@ -28,6 +28,12 @@
                     <x-nav-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.*')">
                         Laporan
                     </x-nav-link>
+                    <x-nav-link :href="route('admin.audit-logs.index')" :active="request()->routeIs('admin.audit-logs.*')">
+                        Audit
+                    </x-nav-link>
+                    <x-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.*')">
+                        Tetapan
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -94,6 +100,12 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.*')">
                 Laporan
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.audit-logs.index')" :active="request()->routeIs('admin.audit-logs.*')">
+                Audit
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.*')">
+                Tetapan
             </x-responsive-nav-link>
         </div>
 
