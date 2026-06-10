@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 class="text-2xl font-bold text-green-950">Rumah Sukan</h1>
+            <h1 class="text-2xl font-bold text-budiman-secondary">Rumah Sukan</h1>
             <a href="{{ route('admin.houses.create') }}" class="kb-btn-primary">Tambah Rumah</a>
         </div>
     </x-slot>
@@ -17,7 +17,7 @@
                             <td class="px-4 py-3"><span class="inline-block h-5 w-10 rounded" style="background: {{ $house->color ?? '#15803d' }}"></span></td>
                             <td class="px-4 py-3">{{ $house->participants_count }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a class="font-semibold text-green-800" href="{{ route('admin.houses.edit', $house) }}">Edit</a>
+                                <a class="font-semibold text-budiman-primary" href="{{ route('admin.houses.edit', $house) }}">Edit</a>
                             </td>
                         </tr>
                     @endforeach

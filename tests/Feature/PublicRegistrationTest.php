@@ -24,7 +24,7 @@ class PublicRegistrationTest extends TestCase
             'age' => 25,
             'phone' => '0123456789',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
         ]);
 
         $participant = Participant::first();
@@ -49,18 +49,19 @@ class PublicRegistrationTest extends TestCase
             'age' => 8,
             'phone' => '0133456789',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
         ]);
 
         $response->assertSessionHasErrors(['guardian_name', 'guardian_phone', 'guardian_relationship']);
     }
 
-    public function test_duplicate_same_normalized_phone_and_name_is_blocked(): void
+    public function test_existing_participant_can_add_a_new_event(): void
     {
         $house = House::create(['name' => 'Rumah Biru']);
-        $sport = Sport::create(['name' => 'Radio Rosak', 'category' => 'Terbuka', 'is_active' => true]);
+        $existingSport = Sport::create(['name' => 'Catch the Scammer', 'category' => 'Terbuka', 'is_active' => true]);
+        $newSport = Sport::create(['name' => 'Radio Rosak', 'category' => 'Terbuka', 'is_active' => true]);
 
-        Participant::create([
+        $participant = Participant::create([
             'registration_code' => 'SRKB-260602-ABCDE',
             'name' => 'Ali Budiman',
             'age' => 20,
@@ -69,14 +70,45 @@ class PublicRegistrationTest extends TestCase
             'house_id' => $house->id,
             'status' => 'Aktif',
         ]);
+        SportRegistration::create(['participant_id' => $participant->id, 'sport_id' => $existingSport->id, 'status' => 'Diterima']);
 
         $this->post('/daftar', [
             'name' => 'Ali Budiman',
             'age' => 20,
             'phone' => '+6012-3456789',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
-        ])->assertSessionHasErrors('name');
+            'sport_ids' => [$newSport->id],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame(1, Participant::count());
+        $this->assertDatabaseHas('sport_registrations', [
+            'participant_id' => $participant->id,
+            'sport_id' => $newSport->id,
+        ]);
+    }
+
+    public function test_duplicate_existing_event_registration_is_blocked(): void
+    {
+        $house = House::create(['name' => 'Rumah Biru']);
+        $sport = Sport::create(['name' => 'Radio Rosak', 'category' => 'Terbuka', 'is_active' => true]);
+        $participant = Participant::create([
+            'registration_code' => 'SRKB-260602-ABCDE',
+            'name' => 'Ali Budiman',
+            'age' => 20,
+            'phone' => '0123456789',
+            'category' => 'Dewasa',
+            'house_id' => $house->id,
+            'status' => 'Aktif',
+        ]);
+        SportRegistration::create(['participant_id' => $participant->id, 'sport_id' => $sport->id, 'status' => 'Diterima']);
+
+        $this->post('/daftar', [
+            'name' => 'Ali Budiman',
+            'age' => 20,
+            'phone' => '+6012-3456789',
+            'house_id' => $house->id,
+            'sport_ids' => [$sport->id],
+        ])->assertSessionHasErrors('sport_ids');
     }
 
     public function test_inactive_event_cannot_be_selected_publicly(): void
@@ -89,8 +121,8 @@ class PublicRegistrationTest extends TestCase
             'age' => 18,
             'phone' => '0143456789',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
-        ])->assertSessionHasErrors('sport_id');
+            'sport_ids' => [$sport->id],
+        ])->assertSessionHasErrors('sport_ids.0');
     }
 
     public function test_incompatible_event_category_is_rejected(): void
@@ -103,8 +135,8 @@ class PublicRegistrationTest extends TestCase
             'age' => 22,
             'phone' => '0163456789',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
-        ])->assertSessionHasErrors('sport_id');
+            'sport_ids' => [$sport->id],
+        ])->assertSessionHasErrors('sport_ids.0');
     }
 
     public function test_child_age_cannot_register_for_adult_event(): void
@@ -117,11 +149,11 @@ class PublicRegistrationTest extends TestCase
             'age' => 11,
             'phone' => '0169999999',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
             'guardian_name' => 'Penjaga Kanak',
             'guardian_phone' => '0129999999',
             'guardian_relationship' => 'Ibu',
-        ])->assertSessionHasErrors('sport_id');
+        ])->assertSessionHasErrors('sport_ids.0');
     }
 
     public function test_age_11_creates_child_category_even_if_payload_is_tampered(): void
@@ -135,7 +167,7 @@ class PublicRegistrationTest extends TestCase
             'phone' => '0153456789',
             'category' => 'Dewasa',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
             'guardian_name' => 'Ibu Budiman',
             'guardian_phone' => '0128888888',
             'guardian_relationship' => 'Ibu',
@@ -158,7 +190,7 @@ class PublicRegistrationTest extends TestCase
             'phone' => '0193456789',
             'category' => 'Kanak-Kanak',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
         ])->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('participants', [
@@ -178,7 +210,7 @@ class PublicRegistrationTest extends TestCase
             'age' => 9,
             'phone' => '0111111111',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
             'guardian_name' => 'Penjaga Terbuka',
             'guardian_phone' => '0127777777',
             'guardian_relationship' => 'Bapa',
@@ -189,7 +221,7 @@ class PublicRegistrationTest extends TestCase
             'age' => 30,
             'phone' => '0112222222',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
         ])->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('participants', ['name' => 'Anak Terbuka', 'category' => 'Kanak-Kanak']);
@@ -216,12 +248,53 @@ class PublicRegistrationTest extends TestCase
             'age' => 21,
             'phone' => '0183456789',
             'house_id' => $house->id,
-            'sport_id' => $sport->id,
+            'sport_ids' => [$sport->id],
         ]);
 
         $this->assertDatabaseHas('sport_registrations', [
             'sport_id' => $sport->id,
             'status' => 'Senarai Menunggu',
+        ]);
+    }
+
+    public function test_public_registration_can_include_multiple_events(): void
+    {
+        $house = House::create(['name' => 'Rumah Hijau']);
+        $firstSport = Sport::create(['name' => 'Catch the Scammer', 'category' => 'Terbuka', 'is_active' => true]);
+        $secondSport = Sport::create(['name' => 'Radio Rosak', 'category' => 'Terbuka', 'is_active' => true]);
+
+        $this->post('/daftar', [
+            'name' => 'Multi Budiman',
+            'age' => 24,
+            'phone' => '0121231234',
+            'house_id' => $house->id,
+            'sport_ids' => [$firstSport->id, $secondSport->id],
+        ])->assertSessionHasNoErrors();
+
+        $participant = Participant::where('name', 'Multi Budiman')->first();
+
+        $this->assertCount(2, $participant->sportRegistrations);
+    }
+
+    public function test_child_can_register_without_own_phone_when_guardian_phone_is_present(): void
+    {
+        $house = House::create(['name' => 'Rumah Merah']);
+        $sport = Sport::create(['name' => 'Pindah Cawan', 'category' => 'Kanak-Kanak', 'is_active' => true]);
+
+        $this->post('/daftar', [
+            'name' => 'Anak Tanpa Telefon',
+            'age' => 9,
+            'house_id' => $house->id,
+            'sport_ids' => [$sport->id],
+            'guardian_name' => 'Penjaga Telefon',
+            'guardian_phone' => '0127000000',
+            'guardian_relationship' => 'Ibu',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('participants', [
+            'name' => 'Anak Tanpa Telefon',
+            'phone' => null,
+            'category' => 'Kanak-Kanak',
         ]);
     }
 

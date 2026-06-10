@@ -13,8 +13,18 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                budiman: {
+                    primary: '#432818',
+                    secondary: '#132a13',
+                    accent: '#6b3a25',
+                    cream: '#f7f3ea',
+                    surface: '#f8f8f7',
+                    footer: '#482719',
+                },
+            },
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Poppins', 'Figtree', ...defaultTheme.fontFamily.sans],
             },
         },
     },

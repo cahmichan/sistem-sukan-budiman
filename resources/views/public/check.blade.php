@@ -1,7 +1,8 @@
 <x-public-layout title="Semak Pendaftaran">
-    <section class="kb-container py-10">
+    <section class="kb-container py-12">
         <div class="mx-auto max-w-xl">
-            <h1 class="text-3xl font-bold text-green-950">Semak Pendaftaran</h1>
+            <p class="text-sm font-bold uppercase tracking-[0.16em] text-budiman-primary">Semakan Peserta</p>
+            <h1 class="mt-2 text-3xl font-extrabold text-budiman-secondary">Semak Pendaftaran</h1>
             <p class="mt-2 text-sm text-stone-600">Masukkan kod pendaftaran atau nombor telefon peserta.</p>
             <form method="POST" action="{{ route('public.lookup') }}" class="kb-card mt-6 space-y-4 p-5">
                 @csrf

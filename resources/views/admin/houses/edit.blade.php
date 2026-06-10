@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-2xl font-bold text-green-950">Edit Rumah Sukan</h1></x-slot>
+    <x-slot name="header"><h1 class="text-2xl font-bold text-budiman-secondary">Edit Rumah Sukan</h1></x-slot>
     <div class="kb-container py-6">
         <form method="POST" action="{{ route('admin.houses.update', $house) }}" class="kb-card p-5">@include('admin.houses._form')</form>
         <form method="POST" action="{{ route('admin.houses.destroy', $house) }}" class="mt-4" onsubmit="return confirm('Padam rumah sukan ini?')">

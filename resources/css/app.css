@@ -4,7 +4,7 @@
 
 @layer base {
     body {
-        background: #f7f6ef;
+        background: #f8f8f7;
         color: #1f2933;
     }
 }
@@ -15,7 +15,7 @@
     }
 
     .kb-card {
-        @apply rounded-lg border border-stone-200 bg-white shadow-sm;
+        @apply rounded-xl border border-stone-200 bg-white shadow-sm;
     }
 
     .kb-label {
@@ -23,14 +23,14 @@
     }
 
     .kb-input {
-        @apply block w-full rounded-lg border-stone-300 text-stone-900 shadow-sm focus:border-green-700 focus:ring-green-700;
+        @apply block w-full rounded-xl border-stone-300 text-stone-900 shadow-sm focus:border-budiman-primary focus:ring-budiman-primary;
     }
 
     .kb-btn-primary {
-        @apply inline-flex items-center justify-center rounded-lg bg-green-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2;
+        @apply inline-flex items-center justify-center rounded-full bg-budiman-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-budiman-accent focus:outline-none focus:ring-2 focus:ring-budiman-primary focus:ring-offset-2;
     }
 
     .kb-btn-secondary {
-        @apply inline-flex items-center justify-center rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2;
+        @apply inline-flex items-center justify-center rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-budiman-primary focus:ring-offset-2;
     }
 }

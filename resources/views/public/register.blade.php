@@ -1,12 +1,17 @@
 <x-public-layout title="Daftar Peserta">
-    <section class="kb-container py-8">
-        <div class="mx-auto max-w-3xl">
-            <div class="mb-6">
-                <h1 class="text-3xl font-bold text-green-950">Daftar Peserta</h1>
-                <p class="mt-2 text-sm text-stone-600">Sila pastikan maklumat tepat sebelum dihantar. Peserta tidak boleh mengedit maklumat selepas pendaftaran.</p>
+    <section class="overflow-hidden">
+        <div class="bg-budiman-footer py-10">
+            <div class="kb-container">
+                <div class="max-w-3xl text-white">
+                    <p class="text-sm font-bold uppercase tracking-[0.16em] text-white/70">Pendaftaran Peserta</p>
+                    <h1 class="mt-2 text-4xl font-extrabold">Daftar Peserta</h1>
+                    <p class="mt-3 text-sm leading-6 text-white/80">Sila pastikan maklumat tepat sebelum dihantar. Peserta tidak boleh mengedit maklumat selepas pendaftaran.</p>
+                </div>
             </div>
+        </div>
 
-            <form method="POST" action="{{ route('public.register.store') }}" class="kb-card space-y-6 p-5 sm:p-6" x-data="{ age: '{{ old('age') }}', category() { return Number(this.age) > 0 && Number(this.age) < {{ $childAgeThreshold }} ? 'Kanak-Kanak' : (Number(this.age) >= {{ $childAgeThreshold }} ? 'Dewasa' : 'Ditentukan melalui umur') } }">
+        <div class="kb-container py-10">
+            <form method="POST" action="{{ route('public.register.store') }}" class="kb-card mx-auto max-w-3xl space-y-6 p-5 sm:p-6" x-data="{ age: '{{ old('age') }}', category() { return Number(this.age) > 0 && Number(this.age) < {{ $childAgeThreshold }} ? 'Kanak-Kanak' : (Number(this.age) >= {{ $childAgeThreshold }} ? 'Dewasa' : 'Ditentukan melalui umur') }, compatible(sportCategory) { return this.category() === 'Ditentukan melalui umur' || sportCategory === 'Terbuka' || sportCategory === this.category() } }">
                 @csrf
 
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -22,12 +27,13 @@
                     </div>
                     <div>
                         <label class="kb-label" for="phone">Nombor telefon</label>
-                        <input class="kb-input" id="phone" name="phone" value="{{ old('phone') }}" placeholder="Contoh: 0123456789" required>
+                        <input class="kb-input" id="phone" name="phone" value="{{ old('phone') }}" placeholder="Contoh: 0123456789" x-bind:required="category() !== 'Kanak-Kanak'">
+                        <p class="mt-1 text-xs text-stone-500">Wajib untuk peserta dewasa. Untuk kanak-kanak, nombor penjaga boleh digunakan.</p>
                         @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="kb-label">Kategori peserta</label>
-                        <div class="rounded-lg border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-green-900" x-text="category()"></div>
+                        <div class="rounded-xl border border-budiman-primary/10 bg-budiman-cream px-3 py-2 text-sm font-semibold text-budiman-primary" x-text="category()"></div>
                         <p class="mt-1 text-xs text-stone-500">Kategori ditentukan secara automatik berdasarkan umur.</p>
                     </div>
                     <div>
@@ -41,22 +47,28 @@
                         @error('house_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="kb-label" for="sport_id">Acara pilihan</label>
-                        <select class="kb-input" id="sport_id" name="sport_id" required>
-                            <option value="">Pilih acara</option>
+                        <label class="kb-label">Acara pilihan</label>
+                        <div class="grid gap-3 sm:grid-cols-2">
                             @foreach ($sports as $sport)
-                                <option value="{{ $sport->id }}" @selected(old('sport_id') == $sport->id) x-bind:disabled="category() !== 'Ditentukan melalui umur' && ! ['Terbuka', category()].includes('{{ $sport->category }}')">
-                                    {{ $sport->name }} - {{ $sport->category }} ({{ $sport->availabilityLabel() }})
-                                </option>
+                                <label class="rounded-xl border border-stone-200 bg-white p-3 text-sm shadow-sm transition hover:border-budiman-primary hover:shadow-md" x-show="compatible('{{ $sport->category }}')" x-bind:class="compatible('{{ $sport->category }}') ? '' : 'opacity-50'">
+                                    <div class="flex items-start gap-3">
+                                        <input class="mt-1 rounded border-stone-300 text-budiman-primary focus:ring-budiman-primary" type="checkbox" name="sport_ids[]" value="{{ $sport->id }}" @checked(in_array($sport->id, old('sport_ids', []))) x-bind:disabled="! compatible('{{ $sport->category }}')">
+                                        <span>
+                                            <span class="block font-semibold text-stone-900">{{ $sport->name }}</span>
+                                            <span class="mt-1 block text-xs text-stone-500">{{ $sport->category }} - {{ $sport->availabilityLabel() }}</span>
+                                        </span>
+                                    </div>
+                                </label>
                             @endforeach
-                        </select>
+                        </div>
                         <p class="mt-2 text-xs text-stone-500">Acara Dewasa/Kanak-Kanak akan dipadankan mengikut umur. Acara Terbuka boleh disertai semua peserta. Jika acara penuh, pendaftaran anda akan dimasukkan ke Senarai Menunggu.</p>
-                        @error('sport_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        @error('sport_ids') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        @error('sport_ids.*') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
-                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4" x-show="Number(age) > 0 && Number(age) < {{ $childAgeThreshold }}">
-                    <h2 class="font-semibold text-amber-950">Maklumat Penjaga</h2>
+                <div class="rounded-xl border border-budiman-primary/20 bg-budiman-cream p-4" x-show="Number(age) > 0 && Number(age) < {{ $childAgeThreshold }}">
+                    <h2 class="font-semibold text-budiman-primary">Maklumat Penjaga</h2>
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <label class="kb-label" for="guardian_name">Nama penjaga</label>

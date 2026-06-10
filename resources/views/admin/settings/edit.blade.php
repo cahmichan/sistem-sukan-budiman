@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="text-2xl font-bold text-green-950">Tetapan Sistem</h1>
+        <h1 class="text-2xl font-bold text-budiman-secondary">Tetapan Sistem</h1>
     </x-slot>
 
     <div class="kb-container py-6">

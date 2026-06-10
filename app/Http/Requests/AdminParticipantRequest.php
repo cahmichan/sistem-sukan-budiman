@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Participant;
 use App\Models\Sport;
+use App\Support\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -34,16 +35,20 @@ class AdminParticipantRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'age' => ['required', 'integer', 'min:1', 'max:120'],
             'phone' => [
-                'required',
+                $isChild ? 'nullable' : 'required',
                 'string',
                 'max:20',
                 'regex:/^(\\+?6?01)[0-9]-?[0-9]{7,8}$/',
-                Rule::unique('participants')->where(fn ($query) => $query->where('name', $this->input('name')))->ignore($participantId),
+                Rule::unique('participants')
+                    ->where(fn ($query) => $query->where('name', $this->input('name')))
+                    ->ignore($participantId),
             ],
             'house_id' => ['required', 'exists:houses,id'],
             'status' => ['required', Rule::in(['Aktif', 'Dibatalkan'])],
-            'sport_id' => [
-                'nullable',
+            'sport_ids' => ['nullable', 'array'],
+            'sport_ids.*' => [
+                'integer',
+                'distinct',
                 'exists:sports,id',
                 function (string $attribute, mixed $value, \Closure $fail) use ($category) {
                     $sport = Sport::find($value);
@@ -53,7 +58,8 @@ class AdminParticipantRequest extends FormRequest
                     }
                 },
             ],
-            'sport_status' => ['nullable', Rule::in(['Menunggu', 'Diterima', 'Ditolak', 'Senarai Menunggu', 'Dibatalkan'])],
+            'sport_statuses' => ['nullable', 'array'],
+            'sport_statuses.*' => ['nullable', Rule::in(['Menunggu', 'Diterima', 'Ditolak', 'Senarai Menunggu', 'Dibatalkan'])],
             'notes' => ['nullable', 'string'],
             'guardian_name' => [$isChild ? 'required' : 'nullable', 'string', 'max:255'],
             'guardian_phone' => [$isChild ? 'required' : 'nullable', 'string', 'max:20', 'regex:/^(\\+?6?01)[0-9]-?[0-9]{7,8}$/'],
@@ -67,8 +73,8 @@ class AdminParticipantRequest extends FormRequest
 
         $this->merge([
             'name' => Str::of($this->input('name'))->squish()->toString(),
-            'phone' => $this->normalizePhone($this->input('phone')),
-            'guardian_phone' => $this->normalizePhone($this->input('guardian_phone')),
+            'phone' => PhoneNumber::normalize($this->input('phone')),
+            'guardian_phone' => PhoneNumber::normalize($this->input('guardian_phone')),
             'category' => $age > 0 ? Participant::categoryForAge($age) : null,
         ]);
     }
@@ -79,22 +85,7 @@ class AdminParticipantRequest extends FormRequest
             '*.required' => 'Medan ini wajib diisi.',
             '*.regex' => 'Sila masukkan nombor telefon Malaysia yang sah.',
             'phone.unique' => 'Rekod peserta dengan nama dan nombor telefon ini telah wujud.',
-            'sport_id' => 'Acara yang dipilih tidak sesuai dengan kategori umur peserta.',
+            'sport_ids.*' => 'Acara yang dipilih tidak sesuai dengan kategori umur peserta.',
         ];
-    }
-
-    private function normalizePhone(?string $phone): ?string
-    {
-        if (blank($phone)) {
-            return $phone;
-        }
-
-        $digits = preg_replace('/\D+/', '', $phone);
-
-        if (str_starts_with($digits, '60')) {
-            return '0'.substr($digits, 2);
-        }
-
-        return $digits;
     }
 }

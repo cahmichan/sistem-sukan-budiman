@@ -21,7 +21,7 @@
             <a class="kb-btn-secondary" href="{{ route('admin.reports.index') }}">Kembali</a>
         </div>
         <header class="border-b border-stone-300 pb-4">
-            <p class="text-sm font-semibold uppercase tracking-wide text-green-800">Sukan Rakyat Kampung Budiman</p>
+            <p class="text-sm font-semibold uppercase tracking-wide text-budiman-primary">Sukan Rakyat Kampung Budiman</p>
             <h1 class="mt-1 text-2xl font-bold">Senarai Peserta</h1>
             <p class="mt-1 text-sm text-stone-600">Dicetak pada {{ now()->format('d/m/Y h:i A') }}</p>
         </header>
@@ -40,15 +40,14 @@
             </thead>
             <tbody>
                 @foreach ($participants as $participant)
-                    @php($registration = $participant->sportRegistrations->first())
                     <tr>
                         <td class="border border-stone-300 p-2">{{ $participant->registration_code }}</td>
                         <td class="border border-stone-300 p-2">{{ $participant->name }}</td>
-                        <td class="border border-stone-300 p-2">{{ $participant->phone }}</td>
+                        <td class="border border-stone-300 p-2">{{ $participant->phone ?? '-' }}</td>
                         <td class="border border-stone-300 p-2">{{ $participant->category }}</td>
                         <td class="border border-stone-300 p-2">{{ $participant->house?->name }}</td>
-                        <td class="border border-stone-300 p-2">{{ $registration?->sport?->name ?? '-' }}</td>
-                        <td class="border border-stone-300 p-2">{{ $registration?->status ?? '-' }}</td>
+                        <td class="border border-stone-300 p-2">{{ $participant->sportRegistrations->pluck('sport.name')->filter()->join(', ') ?: '-' }}</td>
+                        <td class="border border-stone-300 p-2">{{ $participant->sportRegistrations->pluck('status')->filter()->join(', ') ?: '-' }}</td>
                         <td class="border border-stone-300 p-2">{{ $participant->guardian?->name ?? '-' }}</td>
                     </tr>
                 @endforeach

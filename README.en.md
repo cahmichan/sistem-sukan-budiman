@@ -64,6 +64,38 @@ The seeders create:
 
 Change this password before using the system in a real event.
 
+## Production Admin Account
+
+After deployment, create a real admin account through Tinker:
+
+```bash
+php artisan tinker
+```
+
+Then run the following command. Replace the email and password with the real production credentials:
+
+```php
+\App\Models\User::create([
+    'name' => 'Admin',
+    'email' => 'admin@example.com',
+    'password' => \Illuminate\Support\Facades\Hash::make('your-secure-password'),
+]);
+```
+
+If the default admin account already exists and only needs to be changed to a real email:
+
+```php
+$user = \App\Models\User::where('email', 'admin@budiman.test')->first();
+
+$user->update([
+    'name' => 'Admin',
+    'email' => 'real-admin@example.com',
+    'password' => \Illuminate\Support\Facades\Hash::make('your-secure-password'),
+]);
+```
+
+After that, log in through `/login` with the real admin email. Use a strong production password and do not keep `password` as the admin password.
+
 ## Run Locally
 
 ```bash

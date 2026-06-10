@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="text-2xl font-bold text-green-950">Laporan & Eksport</h1></x-slot>
+    <x-slot name="header"><h1 class="text-2xl font-bold text-budiman-secondary">Laporan & Eksport</h1></x-slot>
     <div class="kb-container py-6">
         <form method="GET" class="kb-card grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-5">
             <div>

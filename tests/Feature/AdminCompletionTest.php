@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AuditLog;
+use App\Models\Guardian;
 use App\Models\House;
 use App\Models\Participant;
 use App\Models\Sport;
@@ -55,9 +56,9 @@ class AdminCompletionTest extends TestCase
             'category' => 'Dewasa',
             'house_id' => $house->id,
             'status' => 'Aktif',
-            'sport_id' => $sport->id,
-            'sport_status' => 'Diterima',
-        ])->assertSessionHasErrors('sport_status');
+            'sport_ids' => [$sport->id],
+            'sport_statuses' => [$sport->id => 'Diterima'],
+        ])->assertSessionHasErrors("sport_statuses.{$sport->id}");
     }
 
     public function test_audit_log_page_filters_work(): void
@@ -110,8 +111,8 @@ class AdminCompletionTest extends TestCase
             'category' => 'Dewasa',
             'house_id' => $house->id,
             'status' => 'Aktif',
-            'sport_id' => $sport->id,
-            'sport_status' => 'Diterima',
+            'sport_ids' => [$sport->id],
+            'sport_statuses' => [$sport->id => 'Diterima'],
             'guardian_name' => 'Penjaga Admin',
             'guardian_phone' => '0121111111',
             'guardian_relationship' => 'Ibu',
@@ -121,6 +122,67 @@ class AdminCompletionTest extends TestCase
             'name' => 'Peserta Admin Kanak',
             'category' => 'Kanak-Kanak',
         ]);
+    }
+
+    public function test_admin_can_update_multiple_event_registrations_with_statuses(): void
+    {
+        $user = User::factory()->create();
+        $house = House::create(['name' => 'Rumah Hijau']);
+        $firstSport = Sport::create(['name' => 'Catch the Scammer', 'category' => 'Terbuka', 'is_active' => true]);
+        $secondSport = Sport::create(['name' => 'Radio Rosak', 'category' => 'Terbuka', 'is_active' => true]);
+
+        $response = $this->actingAs($user)->post('/admin/participants', [
+            'name' => 'Peserta Multi Admin',
+            'age' => 30,
+            'phone' => '0122223333',
+            'house_id' => $house->id,
+            'status' => 'Aktif',
+            'sport_ids' => [$firstSport->id, $secondSport->id],
+            'sport_statuses' => [
+                $firstSport->id => 'Diterima',
+                $secondSport->id => 'Senarai Menunggu',
+            ],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $participant = Participant::where('name', 'Peserta Multi Admin')->first();
+
+        $this->assertDatabaseHas('sport_registrations', [
+            'participant_id' => $participant->id,
+            'sport_id' => $firstSport->id,
+            'status' => 'Diterima',
+        ]);
+        $this->assertDatabaseHas('sport_registrations', [
+            'participant_id' => $participant->id,
+            'sport_id' => $secondSport->id,
+            'status' => 'Senarai Menunggu',
+        ]);
+    }
+
+    public function test_whatsapp_button_uses_guardian_phone_when_child_has_no_phone(): void
+    {
+        $user = User::factory()->create();
+        $house = House::create(['name' => 'Rumah Merah']);
+        $guardian = Guardian::create([
+            'name' => 'Penjaga WhatsApp',
+            'phone' => '0127000000',
+            'relationship' => 'Ibu',
+        ]);
+        $participant = Participant::create([
+            'registration_code' => 'SRKB-260602-WHATS',
+            'name' => 'Anak WhatsApp',
+            'age' => 9,
+            'phone' => null,
+            'category' => 'Kanak-Kanak',
+            'house_id' => $house->id,
+            'guardian_id' => $guardian->id,
+            'status' => 'Aktif',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.participants.show', $participant))
+            ->assertOk()
+            ->assertSee('https://wa.me/60127000000', false);
     }
 
     public function test_category_correction_migration_updates_existing_records(): void

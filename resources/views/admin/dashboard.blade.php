@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="text-2xl font-bold text-green-950">Dashboard Admin</h1>
+        <h1 class="text-2xl font-bold text-budiman-secondary">Dashboard Admin</h1>
     </x-slot>
 
     <div class="kb-container py-6">
@@ -8,14 +8,14 @@
             @foreach ([['Jumlah Peserta', $totalParticipants], ['Kanak-Kanak', $childParticipants], ['Dewasa', $adultParticipants], ['Aktif', $activeParticipants]] as [$label, $value])
                 <div class="kb-card p-5">
                     <p class="text-sm font-semibold text-stone-500">{{ $label }}</p>
-                    <p class="mt-2 text-3xl font-bold text-green-950">{{ $value }}</p>
+                    <p class="mt-2 text-3xl font-bold text-budiman-secondary">{{ $value }}</p>
                 </div>
             @endforeach
         </div>
 
         <div class="mt-6 grid gap-6 lg:grid-cols-2">
             <div class="kb-card p-5">
-                <h2 class="font-bold text-green-950">Peserta Mengikut Rumah Sukan</h2>
+                <h2 class="font-bold text-budiman-secondary">Peserta Mengikut Rumah Sukan</h2>
                 <div class="mt-4 space-y-3">
                     @foreach ($participantsByHouse as $house)
                         <div class="flex items-center justify-between border-b border-stone-100 pb-2">
@@ -27,7 +27,7 @@
             </div>
 
             <div class="kb-card p-5">
-                <h2 class="font-bold text-green-950">Pendaftaran Mengikut Acara</h2>
+                <h2 class="font-bold text-budiman-secondary">Pendaftaran Mengikut Acara</h2>
                 <div class="mt-4 space-y-3">
                     @foreach ($sports as $sport)
                         <div class="flex items-center justify-between border-b border-stone-100 pb-2">
@@ -41,8 +41,8 @@
 
         <div class="kb-card mt-6 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-200 p-5">
-                <h2 class="font-bold text-green-950">Pendaftaran Terkini</h2>
-                <a class="text-sm font-semibold text-green-800" href="{{ route('admin.participants.index') }}">Lihat semua</a>
+                <h2 class="font-bold text-budiman-secondary">Pendaftaran Terkini</h2>
+                <a class="text-sm font-semibold text-budiman-primary" href="{{ route('admin.participants.index') }}">Lihat semua</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">

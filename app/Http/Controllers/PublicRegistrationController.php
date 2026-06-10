@@ -9,9 +9,11 @@ use App\Models\Participant;
 use App\Models\Setting;
 use App\Models\Sport;
 use App\Models\SportRegistration;
+use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PublicRegistrationController extends Controller
 {
@@ -53,34 +55,55 @@ class PublicRegistrationController extends Controller
 
         $data = $request->validated();
         $participant = DB::transaction(function () use ($data) {
-            $guardian = null;
             $category = Participant::categoryForAge((int) $data['age']);
+            $participant = $this->findExistingParticipant($data, $category);
 
-            if ($category === 'Kanak-Kanak') {
-                $guardian = Guardian::create([
-                    'name' => $data['guardian_name'],
-                    'phone' => $data['guardian_phone'],
-                    'relationship' => $data['guardian_relationship'],
+            if ($participant && $participant->category !== $category) {
+                throw ValidationException::withMessages([
+                    'age' => 'Kategori umur tidak sepadan dengan rekod sedia ada. Sila hubungi urusetia untuk pembetulan.',
                 ]);
             }
 
-            $participant = Participant::create([
-                'registration_code' => $this->generateRegistrationCode(),
-                'name' => $data['name'],
-                'age' => $data['age'],
-                'phone' => $data['phone'],
-                'category' => $category,
-                'house_id' => $data['house_id'],
-                'guardian_id' => $guardian?->id,
-                'status' => 'Aktif',
-            ]);
+            if (! $participant) {
+                $guardian = null;
 
-            $sport = Sport::lockForUpdate()->findOrFail($data['sport_id']);
-            SportRegistration::create([
-                'participant_id' => $participant->id,
-                'sport_id' => $sport->id,
-                'status' => $sport->hasCapacity() ? 'Diterima' : 'Senarai Menunggu',
-            ]);
+                if ($category === 'Kanak-Kanak') {
+                    $guardian = Guardian::create([
+                        'name' => $data['guardian_name'],
+                        'phone' => $data['guardian_phone'],
+                        'relationship' => $data['guardian_relationship'],
+                    ]);
+                }
+
+                $participant = Participant::create([
+                    'registration_code' => $this->generateRegistrationCode(),
+                    'name' => $data['name'],
+                    'age' => $data['age'],
+                    'phone' => $data['phone'] ?? null,
+                    'category' => $category,
+                    'house_id' => $data['house_id'],
+                    'guardian_id' => $guardian?->id,
+                    'status' => 'Aktif',
+                ]);
+            }
+
+            $existingSportIds = $participant->sportRegistrations()->pluck('sport_id')->all();
+            $newSportIds = collect($data['sport_ids'])->map(fn ($id) => (int) $id)->diff($existingSportIds)->values();
+
+            if ($newSportIds->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'sport_ids' => 'Peserta ini telah didaftarkan untuk semua acara yang dipilih.',
+                ]);
+            }
+
+            foreach ($newSportIds as $sportId) {
+                $sport = Sport::lockForUpdate()->findOrFail($sportId);
+                SportRegistration::create([
+                    'participant_id' => $participant->id,
+                    'sport_id' => $sport->id,
+                    'status' => $sport->hasCapacity() ? 'Diterima' : 'Senarai Menunggu',
+                ]);
+            }
 
             return $participant;
         });
@@ -109,8 +132,11 @@ class PublicRegistrationController extends Controller
         $search = $this->normalizeSearch($request->input('search'));
 
         $participants = Participant::with(['house', 'guardian', 'sportRegistrations.sport'])
-            ->where('registration_code', $search)
-            ->orWhere('phone', $search)
+            ->where(function ($query) use ($search) {
+                $query->where('registration_code', $search)
+                    ->orWhere('phone', $search)
+                    ->orWhereHas('guardian', fn ($query) => $query->where('phone', $search));
+            })
             ->latest()
             ->get();
 
@@ -137,6 +163,23 @@ class PublicRegistrationController extends Controller
         return $code;
     }
 
+    private function findExistingParticipant(array $data, string $category): ?Participant
+    {
+        $query = Participant::with('guardian')->where('name', $data['name']);
+
+        if (! empty($data['phone'])) {
+            return $query->where('phone', $data['phone'])->first();
+        }
+
+        if ($category === 'Kanak-Kanak' && ! empty($data['guardian_phone'])) {
+            return $query
+                ->whereHas('guardian', fn ($query) => $query->where('phone', $data['guardian_phone']))
+                ->first();
+        }
+
+        return null;
+    }
+
     private function normalizeSearch(string $search): string
     {
         $search = trim($search);
@@ -145,12 +188,6 @@ class PublicRegistrationController extends Controller
             return strtoupper($search);
         }
 
-        $digits = preg_replace('/\D+/', '', $search);
-
-        if (str_starts_with($digits, '60')) {
-            return '0'.substr($digits, 2);
-        }
-
-        return $digits ?: $search;
+        return PhoneNumber::normalize($search) ?: $search;
     }
 }

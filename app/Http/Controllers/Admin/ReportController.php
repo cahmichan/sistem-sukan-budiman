@@ -40,7 +40,7 @@ class ReportController extends Controller
                     $participant->registration_code,
                     $participant->name,
                     $participant->age,
-                    $participant->phone,
+                    $participant->phone ?? '-',
                     $participant->category,
                     $participant->house?->name,
                     $participant->status,

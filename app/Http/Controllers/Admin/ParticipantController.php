@@ -50,7 +50,7 @@ class ParticipantController extends Controller
             'participant' => new Participant(['status' => 'Aktif']),
             'houses' => House::orderBy('name')->get(),
             'sports' => Sport::where('is_active', true)->orderBy('category')->orderBy('name')->get(),
-            'selectedRegistration' => null,
+            'selectedRegistrations' => collect(),
         ]);
     }
 
@@ -83,13 +83,13 @@ class ParticipantController extends Controller
      */
     public function edit(Participant $participant)
     {
-        $participant->load('sportRegistrations');
+        $participant->load(['guardian', 'sportRegistrations']);
 
         return view('admin.participants.edit', [
             'participant' => $participant,
             'houses' => House::orderBy('name')->get(),
             'sports' => Sport::orderBy('category')->orderBy('name')->get(),
-            'selectedRegistration' => $participant->sportRegistrations->first(),
+            'selectedRegistrations' => $participant->sportRegistrations->keyBy('sport_id'),
         ]);
     }
 
@@ -146,7 +146,7 @@ class ParticipantController extends Controller
         $participant->fill([
             'name' => $data['name'],
             'age' => $data['age'],
-            'phone' => $data['phone'],
+            'phone' => $data['phone'] ?? null,
             'category' => $category,
             'house_id' => $data['house_id'],
             'guardian_id' => $guardian?->id,
@@ -160,15 +160,16 @@ class ParticipantController extends Controller
 
         $participant->save();
 
-        $participant->sportRegistrations()->where('sport_id', '!=', $data['sport_id'] ?? 0)->delete();
+        $sportIds = collect($data['sport_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+        $participant->sportRegistrations()->whereNotIn('sport_id', $sportIds)->delete();
 
-        if (! empty($data['sport_id'])) {
-            $sport = Sport::lockForUpdate()->findOrFail($data['sport_id']);
-            $status = $data['sport_status'] ?? 'Menunggu';
+        foreach ($sportIds as $sportId) {
+            $sport = Sport::lockForUpdate()->findOrFail($sportId);
+            $status = $data['sport_statuses'][$sportId] ?? 'Menunggu';
 
             if ($status === 'Diterima' && ! $sport->hasCapacity($participant->id)) {
                 throw ValidationException::withMessages([
-                    'sport_status' => 'Acara ini telah penuh. Gunakan status Senarai Menunggu atau pilih acara lain.',
+                    "sport_statuses.{$sportId}" => 'Acara ini telah penuh. Gunakan status Senarai Menunggu atau pilih acara lain.',
                 ]);
             }
 

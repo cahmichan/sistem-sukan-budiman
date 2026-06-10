@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 class="text-2xl font-bold text-green-950">Pengurusan Peserta</h1>
+            <h1 class="text-2xl font-bold text-budiman-secondary">Pengurusan Peserta</h1>
             <a href="{{ route('admin.participants.create') }}" class="kb-btn-primary">Tambah Peserta</a>
         </div>
     </x-slot>
@@ -36,11 +36,11 @@
                             <tr class="border-t border-stone-100">
                                 <td class="px-4 py-3">{{ $participant->registration_code }}</td>
                                 <td class="px-4 py-3 font-semibold">{{ $participant->name }}</td>
-                                <td class="px-4 py-3">{{ $participant->phone }}</td>
+                                <td class="px-4 py-3">{{ $participant->phone ?? '-' }}</td>
                                 <td class="px-4 py-3">{{ $participant->category }}</td>
                                 <td class="px-4 py-3">{{ $participant->house?->name }}</td>
                                 <td class="px-4 py-3">{{ $participant->status }}</td>
-                                <td class="px-4 py-3 text-right"><a class="font-semibold text-green-800" href="{{ route('admin.participants.show', $participant) }}">Lihat</a></td>
+                                <td class="px-4 py-3 text-right"><a class="font-semibold text-budiman-primary" href="{{ route('admin.participants.show', $participant) }}">Lihat</a></td>
                             </tr>
                         @empty
                             <tr><td class="px-4 py-6 text-center text-stone-500" colspan="7">Tiada rekod peserta.</td></tr>

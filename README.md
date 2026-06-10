@@ -61,6 +61,38 @@ Seeder akan mencipta:
 
 Tukar kata laluan ini sebelum digunakan secara sebenar.
 
+## Akaun Admin Produksi
+
+Selepas deploy, cipta akaun admin sebenar melalui Tinker:
+
+```bash
+php artisan tinker
+```
+
+Kemudian jalankan arahan berikut. Gantikan emel dan kata laluan dengan maklumat sebenar:
+
+```php
+\App\Models\User::create([
+    'name' => 'Admin',
+    'email' => 'admin@example.com',
+    'password' => \Illuminate\Support\Facades\Hash::make('your-secure-password'),
+]);
+```
+
+Jika akaun admin default sudah wujud dan hanya perlu ditukar kepada emel sebenar:
+
+```php
+$user = \App\Models\User::where('email', 'admin@budiman.test')->first();
+
+$user->update([
+    'name' => 'Admin',
+    'email' => 'real-admin@example.com',
+    'password' => \Illuminate\Support\Facades\Hash::make('your-secure-password'),
+]);
+```
+
+Selepas itu, log masuk melalui `/login` menggunakan emel admin sebenar. Pastikan kata laluan produksi kuat dan tidak menggunakan `password`.
+
 ## Run Local
 
 ```bash
